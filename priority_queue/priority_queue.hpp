@@ -32,25 +32,26 @@ private:
     _Priority priority_;
 };
 
-template<class _T, class _Priority>
+template<class _T, class _Priority, class _Id = size_t>
 class IPriorityQueueNodePtr {
 public:
     virtual const PriorityQueueNode<_T, _Priority> & getNode() const = 0;
     virtual bool isValid() const = 0;
+    virtual _Id getId() const = 0;
+    virtual const void *getParentPtr() const = 0;
 };
 
 template <class Key, class Value> using PQNodePtr = std::shared_ptr<IPriorityQueueNodePtr<Key, Value>>;
 
-template<class _T, class _Priority, class _Comp = std::less<_Priority>,
-    typename _NodePtr = std::shared_ptr<IPriorityQueueNodePtr<_T, _Priority>>>
+template<class _T, class _Priority, class _Comp = std::less<_Priority>>
 class IPriorityQueue {
 public:
-    virtual _NodePtr insert(const _T &key, const _Priority &priority) = 0;
+    virtual PQNodePtr<_T, _Priority> insert(const _T &key, const _Priority &priority) = 0;
     virtual const PriorityQueueNode<_T, _Priority> & getTop() const = 0;
     virtual void extractTop() = 0;
     virtual void clear() = 0;
     virtual size_t size() const = 0;
     virtual bool empty() const = 0;
-    virtual void updatePriority(_NodePtr pointer, const _Priority &newPriority) = 0;
+    virtual void updatePriority(PQNodePtr<_T, _Priority> pointer, const _Priority &newPriority) = 0;
 };
 

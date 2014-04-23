@@ -16,6 +16,7 @@ PQBinomial & PQBinomial::operator= (const PQBinomial &rhs) {
         head_ = copyNode(rhs.head_, nullptr);
         size_ = rhs.size_;
         comparer_ = rhs.comparer_;
+        (*heapDestroyed_) = true; 
         heapDestroyed_ = std::make_shared<bool>(false);
     }
 }
@@ -64,7 +65,7 @@ void PQBinomial::extractTop() {
         prev = x;
         x = x->getSibling();
     }
-    // Extract minimum
+    // Отцепляем ребенка и переворачиваем его список братьев
     _NodePtr node = min->getChild();
     if (node) {
         _NodePtr next = node->getSibling();
@@ -79,7 +80,7 @@ void PQBinomial::extractTop() {
             next = savedSibling;
         }
     }
-    // Free minimal node
+    // Удаляем минимум и прицепляем список братьев
     if (min == head_) {
         head_ = min->getSibling();
     } else {
@@ -97,11 +98,10 @@ void PQBinomial::updatePriority(std::shared_ptr<_BasePtr> pointer, const _Priori
     if (!pointer) {
         throw std::runtime_error("update key error: null pointer");
     }
-    std::shared_ptr<_BinomialPtr> ptr = std::dynamic_pointer_cast<_BinomialPtr, _BasePtr>(pointer);
-    if (!ptr || (ptr->getParent() != this) || !ptr->isValid()) {
+    if (pointer->getParentPtr() != this || !pointer->isValid()) {
         throw std::runtime_error("update key error: invalid pointer");
     }
-    _NodePtr node = nodePtrs_[ptr->getId()].lock();
+    _NodePtr node = nodePtrs_[pointer->getId()].lock();
     if (comparer_(newPriority, node->getPriority())) {
         throw std::invalid_argument("update key error: invalid new priority");
     }
@@ -127,10 +127,21 @@ template <class _T, class _Priority, class _Comp>
 typename PQBinomial::_NodePtr PQBinomial::binomialHeapMerge(_NodePtr first, _NodePtr second) {
     _NodePtr newHead;
     _NodePtr saved;
-    if (!first && !second) {
-        return nullptr;
-    } else if (!first || !second) {
-        return (first != nullptr) ? first : second;
+
+    auto joinAndMove = [&] (_NodePtr node) {
+        newHead->setSibling(node);
+        newHead = newHead->getSibling();
+        if (first == node) {
+            first = first->getSibling();
+        } else {
+            second = second->getSibling();
+        }
+    };
+
+    if (!first) {
+        return second;
+    } else if (!second) {
+        return first;
     } else {
         if (first->getDegree() < second->getDegree()) {
             newHead = first;
@@ -143,24 +154,13 @@ typename PQBinomial::_NodePtr PQBinomial::binomialHeapMerge(_NodePtr first, _Nod
     saved = newHead;
     while (first && second) {
         if (first->getDegree() < second->getDegree()) {
-            newHead->setSibling(first);
-            newHead = newHead->getSibling();
-            first = first->getSibling();
+            joinAndMove(first);
         } else {
-            newHead->setSibling(second);
-            newHead = newHead->getSibling();
-            second = second->getSibling();
+            joinAndMove(second);
         }
     }
-    while (first) {
-        newHead->setSibling(first);
-        newHead = newHead->getSibling();
-        first = first->getSibling();
-    }
-    while (second) {
-        newHead->setSibling(second);
-        newHead = newHead->getSibling();
-        second = second->getSibling();
+    while (first || second) { 
+        joinAndMove(((first != nullptr) ? first : second));
     }
     return saved;
 }

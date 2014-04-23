@@ -20,10 +20,6 @@ private:
             parent_(ptr)
         { }
 
-        const PriorityQueueBinary<_T, _Priority, _Comp> *getParent() const {
-            return parent_;
-        }
-
         // IPriorityQueueNodePtr implementation
         virtual const PriorityQueueNode<_T, _Priority> & getNode() const {
             if (!isValid()) {
@@ -39,7 +35,11 @@ private:
                 parent_->adr_.find(id_)->second < parent_->data_.size();
         }
 
-        size_t getId() const { return id_; }
+        virtual size_t getId() const { return id_; }
+
+        virtual const void *getParentPtr() const {
+            return parent_;
+        }
 
     private:
         size_t id_;
@@ -59,16 +59,6 @@ public:
         heapDestroyed_(std::make_shared<bool>(false))
     { }
 
-    PriorityQueueBinary(const std::vector<_NodeType> &items, 
-                        const _Comp &compare = _Comp()):
-        base_(0),
-        data_(items),
-        comparer_(compare),
-        heapDestroyed_(std::make_shared<bool>(false))
-    {
-        buildHeap();
-    }
-
     PriorityQueueBinary(const std::vector<std::pair<_T, _Priority>> &items, 
                         const _Comp &compare = _Comp());
     PriorityQueueBinary(const PriorityQueueBinary &pq);
@@ -78,7 +68,6 @@ public:
     }
 
     PriorityQueueBinary & operator= (const PriorityQueueBinary &rhs);
-    bool operator== (const PriorityQueueBinary &rhs) const = delete;
 
     // IPriorityQueue implementation
     virtual std::shared_ptr<_BasePtr> insert(const _T &data, const _Priority &priority);
@@ -87,20 +76,17 @@ public:
     
     virtual void clear() {
         data_.clear();
+        positions_.clear();
+        adr_.clear();
         base_ = 0;
+        // Делаем все старые указатели на элементы недействительными
+        (*heapDestroyed_) = true;
+        heapDestroyed_ = std::make_shared<bool>(false);
     }
   
     virtual size_t size() const { return data_.size(); }
     virtual bool empty() const { return data_.empty(); }
     virtual void updatePriority(std::shared_ptr<_BasePtr> pointer, const _Priority &newPriority);
-
-#ifdef DEBUG
-    void dump(std::ostream &o) {
-        for (size_t i = 0; i < data_.size(); ++i) {
-            o << "Key: " << data_[i].getKey() << ", " << "Prior: " << data_[i].getPriority() << std::endl;
-        }
-    }
-#endif
 
 private:
     size_t base_;

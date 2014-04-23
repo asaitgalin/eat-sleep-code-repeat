@@ -55,11 +55,6 @@ private:
             isHeapDestroyed_(ptr->heapDestroyed_)
         { }
 
-        const PriorityQueueBinomial<_T, _Priority, _Comp> *getParent() const {
-            return parent_;
-        }
-
-        size_t getId() const { return id_; }
         void setId(size_t newId) { id_ = newId; }
         
         // IPriorityQueueNodePtr implementation
@@ -73,6 +68,12 @@ private:
         virtual bool isValid() const {
             return (*isHeapDestroyed_) == false && 
                 parent_->nodePtrs_.find(id_) != parent_->nodePtrs_.end();
+        }
+
+        virtual size_t getId() const { return id_; }
+
+        virtual const void *getParentPtr() const {
+            return parent_;
         }
 
     private:
@@ -101,8 +102,6 @@ public:
     PriorityQueueBinomial(const PriorityQueueBinomial &heap);
     PriorityQueueBinomial & operator= (const PriorityQueueBinomial &rhs);
 
-    bool operator== (const PriorityQueueBinomial &rhs) const = delete;
-
     // IPriorityQueue implementation
     virtual std::shared_ptr<_BasePtr> insert(const _T &data, const _Priority &priority);
     virtual const _NodeType & getTop() const;
@@ -113,7 +112,11 @@ public:
         nodePtrs_.clear();
         size_ = 0;
         base_ = 0;
+        // Делаем все старые указатели на элементы недействительными
+        (*heapDestroyed_) = true;
+        heapDestroyed_ = std::make_shared<bool>(false);
     }
+
     virtual size_t size() const { return size_; }
     virtual bool empty() const { return size_ == 0; }
     virtual void updatePriority(std::shared_ptr<_BasePtr> pointer, const _Priority &newPriority); 

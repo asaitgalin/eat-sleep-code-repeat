@@ -30,6 +30,7 @@ PQBinary & PQBinary::operator= (const PQBinary &rhs) {
         base_ = rhs.base_; 
         positions_ = rhs.positions_;
         adr_ = rhs.adr_;
+        (*heapDestroyed_) = true;
         heapDestroyed_ = std::make_shared<bool>(false);
     }
 }
@@ -40,7 +41,7 @@ std::shared_ptr<typename PQBinary::_BasePtr> PQBinary::insert(const _T &data, co
     size_t index = data_.size();
     data_.push_back(_NodeType(data, priority));
     positions_.push_back(id);
-    adr_.insert(std::make_pair(id, index));
+    adr_.emplace(id, index);
     siftUp(index);
     return std::make_shared<_BinaryPtr>(this, id);
 }
@@ -62,11 +63,10 @@ void PQBinary::updatePriority(std::shared_ptr<_BasePtr> pointer, const _Priority
     if (!pointer->isValid()) {
         throw std::runtime_error("update key error: invalid pointer");
     }
-    std::shared_ptr<_BinaryPtr> node = std::dynamic_pointer_cast<_BinaryPtr, _BasePtr>(pointer);
-    if (!node || node->getParent() != this) {
+    if (pointer->getParentPtr() != this) {
         throw std::runtime_error("update key error: invalid pointer");
     }
-    size_t dataIndex = adr_[node->getId()];
+    size_t dataIndex = adr_[pointer->getId()];
     if (comparer_(newPriority, data_[dataIndex].getPriority())) {
         throw std::invalid_argument("update key error: bad new priority");
     }            
