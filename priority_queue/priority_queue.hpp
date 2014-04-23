@@ -5,7 +5,7 @@
 #include <functional>
 #include <memory>
 
-// Класс для минимального элемента кучи (ключ + приоритет)
+// Минимальный класс для элемента кучи (ключ + приоритет)
 template<class _T, class _Priority>
 class PriorityQueueNode {
 public:
@@ -35,7 +35,7 @@ private:
     _Priority priority_;
 };
 
-// Интерфейс для произвольного абстрактного указателя на элемент в куче
+// Интерфейс для произвольного абстрактного указателя на элемент в очереди
 // Необходим для операции updateKey
 template<class _T, class _Priority, class _Id = size_t>
 class IPriorityQueueNodePtr {
