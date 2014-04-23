@@ -1,3 +1,5 @@
+// priority_queue_binary_impl.hpp
+// Andrey Saitgalin, 2014
 #define PQBinary PriorityQueueBinary<_T, _Priority, _Comp>
 
 template <class _T, class  _Priority, class _Comp>

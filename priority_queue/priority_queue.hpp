@@ -1,8 +1,11 @@
+// priority_queue.hpp
+// Andrey Saitgalin, 2014
 #pragma once
 
 #include <functional>
 #include <memory>
 
+// Класс для минимального элемента кучи (ключ + приоритет)
 template<class _T, class _Priority>
 class PriorityQueueNode {
 public:
@@ -32,17 +35,27 @@ private:
     _Priority priority_;
 };
 
+// Интерфейс для произвольного абстрактного указателя на элемент в куче
+// Необходим для операции updateKey
 template<class _T, class _Priority, class _Id = size_t>
 class IPriorityQueueNodePtr {
 public:
     virtual const PriorityQueueNode<_T, _Priority> & getNode() const = 0;
     virtual bool isValid() const = 0;
+    // Возвращает абстрактный уникальный идентификатор. Так как положения 
+    // элементов в структуре данных могут поменяться, по идентификатору всегда 
+    // должна быть возможность восстановить элемент
     virtual _Id getId() const = 0;
-    virtual const void *getParentPtr() const = 0;
+    // Возвращает абстрактный указатель на кучу, его создавшую. Не освобождать!
+    virtual const void *getParentPtr() const = 0; 
 };
 
 template <class Key, class Value> using PQNodePtr = std::shared_ptr<IPriorityQueueNodePtr<Key, Value>>;
 
+// Произвольная очередь с приоритетом
+// Компаратор работает также, как в куче из STL (...the element popped is the last according 
+// to strict weak ordering criterion...)
+// По умолчанию в вершине находится максимальный элемент
 template<class _T, class _Priority, class _Comp = std::less<_Priority>>
 class IPriorityQueue {
 public:

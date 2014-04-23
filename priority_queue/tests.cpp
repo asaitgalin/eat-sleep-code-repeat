@@ -1,3 +1,5 @@
+// tests.cpp
+// Andrey Saitgalin, 2014
 #define BOOST_TEST_MODULE HeapsTest
 #include <boost/test/included/unit_test.hpp>
 #include <iostream>
@@ -13,6 +15,7 @@
 
 std::default_random_engine generator;
 
+// Тест на корректность
 template <typename Heap>
 void correctnessTest() {
     const size_t ItemsCount = 1000000;
@@ -52,6 +55,7 @@ BOOST_AUTO_TEST_CASE(BinomialHeapCorrectnessTest) {
     correctnessTest<PriorityQueueBinomial<int, int>>();
 }
 
+// Одни и те же указатели на разных кучах и разных их экземплярах работать не должны
 BOOST_AUTO_TEST_CASE(PointersFromDifferentQueuesMustFailTest) {
     PriorityQueueBinary<int, int> binary;
     PriorityQueueBinomial<int, int> binomial;
@@ -79,6 +83,7 @@ BOOST_AUTO_TEST_CASE(BinaryPointersFromDifferentInstancesMustFailTest) {
     BOOST_CHECK_THROW(binary1.updatePriority(binaryPtr2, 1), std::runtime_error);
 }
 
+// Тест на правильность работы указателей и уменьшения приоритета
 template <typename Heap>
 void decreasePriorityTest() {
     Heap heap;
@@ -157,6 +162,7 @@ BOOST_AUTO_TEST_CASE(BinomialHeapSizeTest) {
     sizeTest<PriorityQueueBinomial<int, int>>();
 }
 
+// Тест на конструктор копирования биномиальной кучи
 BOOST_AUTO_TEST_CASE(BinomialHeapCopyTest) {
     PriorityQueueBinomial<int, int> q;
     for (int i = 0; i < 10; ++i) {

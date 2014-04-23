@@ -1,3 +1,5 @@
+// priority_queue_binomial.hpp
+// Andrey Saitgalin, 2014
 #pragma once
 
 #include <memory>
@@ -10,6 +12,7 @@
 
 #include "priority_queue.hpp"
 
+// Стандартная реализация биномиальной кучи (см. Кормен)
 template<class _T, class _Priority, class _Comp = std::less<_Priority>>
 class PriorityQueueBinomial: public IPriorityQueue<_T, _Priority, _Comp> {
 private:
@@ -39,11 +42,12 @@ private:
         void setId(size_t newId) { id_ = newId; }
 
     private:
-        _NodeWPtr parent_;
+        _NodeWPtr parent_; 
         _NodePtr sibling_;
         _NodePtr child_;
         size_t degree_;
-        size_t id_;
+        // Универсальный идентификатор для каждой ноды (может поменяться при swap при обновлении приоритета)
+        size_t id_; 
     };
 
     class PriorityQueueBinomialPtr: public IPriorityQueueNodePtr<_T, _Priority> {
@@ -140,6 +144,7 @@ private:
 
     _NodePtr binomialHeapMerge(_NodePtr first, _NodePtr second);
     void binomialHeapUnionWithThis(_NodePtr heapHead);
+    // Копирует вершину, создавая новые указатели (используется в операторе = и конструкторе копирования)
     _NodePtr copyNode(_NodePtr node, _NodePtr parent);
 };
 

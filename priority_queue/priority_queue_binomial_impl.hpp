@@ -1,3 +1,5 @@
+// priority_queue_binomial_impl.hpp
+// Andrey Saitgalin, 2014
 #define PQBinomial PriorityQueueBinomial<_T, _Priority, _Comp>
 
 template <class _T, class _Priority, class _Comp>
@@ -109,9 +111,9 @@ void PQBinomial::updatePriority(std::shared_ptr<_BasePtr> pointer, const _Priori
     _NodePtr p = node->getParent();
     _NodePtr y = node;
     while (p && comparer_(p->getPriority(), y->getPriority())) {
-        y->swap(*p); // Swap node contents
+        y->swap(*p); // Обмениваем содержимое вершин
         
-        // Swap pointers in hash map
+        // Обновляем указатели по универсальным идентификаторам
         std::swap(nodePtrs_[y->getId()], nodePtrs_[p->getId()]);
            
         size_t pIndex = p->getId();
@@ -128,14 +130,10 @@ typename PQBinomial::_NodePtr PQBinomial::binomialHeapMerge(_NodePtr first, _Nod
     _NodePtr newHead;
     _NodePtr saved;
 
-    auto joinAndMove = [&] (_NodePtr node) {
+    auto joinAndMove = [&newHead] (_NodePtr &node) {
         newHead->setSibling(node);
         newHead = newHead->getSibling();
-        if (first == node) {
-            first = first->getSibling();
-        } else {
-            second = second->getSibling();
-        }
+        node = node->getSibling();    
     };
 
     if (!first) {

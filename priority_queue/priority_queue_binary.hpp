@@ -1,3 +1,5 @@
+// priority_queue_binary.hpp
+// Andrey Saitgalin, 2014
 #pragma once
 
 #include <vector>
@@ -10,7 +12,11 @@
 template<class _T, class _Priority, class _Comp = std::less<_Priority>>
 class PriorityQueueBinary: public IPriorityQueue<_T, _Priority, _Comp> {
 private:
-
+    
+    // HeapDestroyed: shared_ptr<bool>
+    // Этот умный указатель необходим, чтобы при уничтожении структуры данных (очистка,
+    // деструктор) по абстрактному указателю нельзя было обратиться к элементам
+    
     class PriorityQueueBinaryPtr: public IPriorityQueueNodePtr<_T, _Priority> {
     public:
         
@@ -90,10 +96,10 @@ public:
 
 private:
     size_t base_;
-    std::vector<_NodeType> data_;
+    std::vector<_NodeType> data_; // Элементы кучи
     _Comp comparer_;
-    std::vector<size_t> positions_;
-    std::unordered_map<size_t, size_t> adr_; // adr_: node_number -> node_index_in_vector
+    std::vector<size_t> positions_; // positions_: node_index_in_vector -> unique_id
+    std::unordered_map<size_t, size_t> adr_; // adr_: unique_id -> node_index_in_vector 
     std::shared_ptr<bool> heapDestroyed_;
 
     friend class PriorityQueueBinaryPtr;
