@@ -70,7 +70,7 @@ void TextSplitter::getSentences(std::ostream &out, size_t &count) {
 
 void TextSplitter::readAbbreviations() {
     std::fstream f(abbreviationsFile);
-    if (f) { // if no file - oke, we will do without it
+    if (f) { // if no file - ok, we will do without it
         std::string s;
         while (std::getline(f, s)) {
             if (!s.empty()) {

@@ -14,16 +14,17 @@
 #include "search_stemmer.h"
 #include "search_utils.h"
 
-const size_t DISPLAY_LIMIT = 10; // max sentence count to be displayed
+const size_t DISPLAY_LIMIT = 10; // max sentence count to be displayed (-1 to display all)
                 
 class SearchTrie {
+// Simple trie. Used to store words with info
 public:
     typedef unsigned char _uChar;
    
     /* Subclass trie Node */
     
     class Node {
-        typedef std::map<size_t, size_t>::const_iterator _iterator;
+        typedef std::map<size_t, size_t>::const_iterator _Iterator;
     public:
         
         ~Node() {
@@ -64,12 +65,12 @@ public:
         }
 
         size_t getSentencesCount() const { return sentences_.size(); }
-        _iterator sentenceIterBegin() const { return sentences_.begin(); }
-        _iterator sentenceIterEnd() const { return sentences_.end(); }
+        _Iterator sentenceIterBegin() const { return sentences_.begin(); }
+        _Iterator sentenceIterEnd() const { return sentences_.end(); }
         
     private:
         std::map<_uChar, Node *> children_;
-        std::map<size_t, size_t> sentences_; // document -> term frequency (can be zero)
+        std::map<size_t, size_t> sentences_; // Document -> term frequency (can be zero)
     };
 
     /* SearchTrie */
@@ -89,10 +90,11 @@ public:
 
 private:
     Node *root_;
-    size_t size_; // behaves like total word count (not only unique count)
+    size_t size_; // Behaves like total word count (not only unique count)
 };
 
 class SearchIndexer {
+// Indexer. Splits input file to sentences, prepares index file and fills Trie with words
 public:
    
     SearchIndexer(const std::string &fileName):
@@ -101,42 +103,48 @@ public:
 
     void prepareIndex();
     std::string getSentenceById(size_t id);
-
+ 
     size_t getSentenceWordCount(size_t id) const {
         std::map<size_t, size_t>::const_iterator it = wordCount_.find(id);
         if (it == wordCount_.end()) {
-            throw std::runtime_error("indexer: failed to get sentence word count");
+            throw std::runtime_error("indexer: failed to get sentence word count. Document not found");
         }
         return it->second;
     }
-       
+      
+    // Total sentences count
     size_t getSentenceCount() const { return sentenceCount_; }
+    // Average word count in each sentence (for BM25)
     float getAvgWordCount() const { return averageWordCount_; }
     const SearchTrie &getTrie() const { return wordsTrie_; } 
 
 private:
-    std::fstream inputStream_;
-    size_t sentenceCount_; // total sentences count
+    std::fstream inputStream_; // Input file
+    size_t sentenceCount_; // Total sentences count
     float averageWordCount_; 
 
     SearchTrie wordsTrie_;    
-    std::map<size_t, size_t> wordCount_; // word count in each sentence
-    std::fstream indexStream_;
-    std::vector<std::streampos> offsets_; // offset for each sentence in index file
+    std::map<size_t, size_t> wordCount_; // Word count in each sentence
+    std::fstream indexStream_; // Index file
+    std::vector<std::streampos> offsets_; // Offset for each sentence in index file
 
     void splitSourceText();
 };
 
 class SentencesComparerByScore {
+// Compares sentences by their score from scores map
 public:
  
-    SentencesComparerByScore(const std::map<size_t, float > &scores):
+    SentencesComparerByScore(const std::map<size_t, float> &scores):
         scores_(scores)
     { }
 
     bool operator() (size_t i, size_t j) const {
         std::map<size_t, float>::const_iterator pi = scores_.find(i);
         std::map<size_t, float>::const_iterator pj = scores_.find(j);
+        if (pi == scores_.end() || pj == scores_.end()) {
+            throw std::runtime_error("sentences comparer: document was not found in scores map");
+        }
         return *pi < *pj;
     }
 

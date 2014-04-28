@@ -1,21 +1,18 @@
-#pragma once
+#ifndef _SEARCH_STEMMER_H_
+#define _SEARCH_STEMMER_H_
+
 #include <stdexcept>
 
 #include "stemmer/libstemmer.h"
 
 class CustomStemmer {
-/* 
- * Can be used for different algorithms 
- */
 public:
     virtual std::string getStem(const std::string &word) = 0;
     virtual ~CustomStemmer() { }
 };
 
 class SnowballStemmer : public CustomStemmer {
-/*
- * Uses Snowball stemming library 
- */
+// Uses Snowball stemming library
 public:    
     
     SnowballStemmer() {
@@ -42,4 +39,6 @@ public:
 private:
     struct sb_stemmer *handle_;
 };
+
+#endif /* _SEARCH_STEMMER_H_ */
 

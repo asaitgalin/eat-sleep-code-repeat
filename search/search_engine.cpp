@@ -19,7 +19,7 @@ SearchTrie::Node * SearchTrie::findWord(const std::string &s) const {
     for (std::string::const_iterator it = s.begin(); it != s.end(); ++it) {
         _uChar letter = *it;
         if (!current->getChild(letter)) {
-            return NULL; // maybe add some autocompletion?
+            return NULL; 
         } else {
             current = current->getChild(letter);
         }
@@ -35,6 +35,7 @@ void SearchIndexer::prepareIndex() {
     std::string line;
     offsets_.push_back(0);
     CustomStemmer *stemmer = new SnowballStemmer; 
+    // Read each sentence, split it by words and add these words to Trie data structure
     while (std::getline(indexStream_, line)) {
         std::transform(line.begin(), line.end(), line.begin(), ::tolower);
         boost::tokenizer<> tokenizer(line);
@@ -49,11 +50,12 @@ void SearchIndexer::prepareIndex() {
         ++i;
         offsets_.push_back(indexStream_.tellg());
     }
-    averageWordCount_ = (float)wordsTrie_.getSize() / (float)sentenceCount_;
+    averageWordCount_ = (float)wordsTrie_.getSize() / sentenceCount_;
     delete stemmer;
 }
 
 std::string SearchIndexer::getSentenceById(size_t id) {
+    // Read sentence from index file by id 
     std::streampos pos = offsets_.at(id);
     indexStream_.clear();
     indexStream_.seekg(pos, indexStream_.beg);
@@ -90,11 +92,11 @@ void SearchEngine::init() {
 }
 
 void SearchEngine::processRequest(const std::string &req) {
-    boost::tokenizer<> tok(req);
+    boost::tokenizer<> tok(req); // Used to split request to words 
 
-    std::vector<const SearchTrie::Node *> stats; // frequencies for each word
-    std::map<size_t, size_t> sentenceToCount; // stores how much words from query has sentence 
-    std::set<size_t> sentences; // all sentences that contain some of query words
+    std::vector<const SearchTrie::Node *> stats; // Trie node for each query word (can be NULL)
+    std::map<size_t, size_t> sentenceToCount; // Stores how much words from query has sentence 
+    std::set<size_t> sentences; // All sentences that contain some of query words
 
     for (boost::tokenizer<>::iterator it = tok.begin(); it != tok.end(); ++it) {
         std::string s = *it;
@@ -114,22 +116,22 @@ void SearchEngine::processRequest(const std::string &req) {
         }
     }
    
-    // Documents with highest number of words from query will be shown before others
-    std::map<size_t, std::vector<size_t> > countToSentences; // words count from query to document
+    std::map<size_t, std::vector<size_t> > countToSentences; // Maps words count (how many word from query has sentence) to sentence id
     for (std::map<size_t, size_t>::const_iterator it = sentenceToCount.begin(); it != sentenceToCount.end(); ++it) {
         countToSentences[it->second].push_back(it->first);
     }
 
-    // Documents scores calculation (Okapi BM25)
+    // Sentences scores calculation (Okapi BM25) (parameters: k1 = 1.5f, b = 0.75f)
+    // http://en.wikipedia.org/wiki/Okapi_BM25
     std::map<size_t, float> sentenceToScore;
     for (std::set<size_t, size_t>::const_iterator it = sentences.begin(); it != sentences.end(); ++it) {
         float score = 0.0f;
         for (size_t i = 0; i < stats.size(); ++i) {
-            if (stats[i]) { // if any document contain word
+            if (stats[i]) { // If any document contain this query word
                 size_t sentenceWC = indexer_.getSentenceWordCount(*it);
-                float idf = std::log((float)(indexer_.getSentenceCount()) / (float)stats[i]->getSentencesCount());
-                float tf = (float)stats[i]->getTermFreq(*it) / (float)sentenceWC; 
-                score += (idf * 2.5f * tf) / (tf + 1.5f * (0.25 + 0.75 * ((float)sentenceWC / indexer_.getAvgWordCount())));
+                float idf = std::log((float)indexer_.getSentenceCount() / stats[i]->getSentencesCount());
+                float tf = (float)stats[i]->getTermFreq(*it) / sentenceWC; 
+                score += (idf * 2.5f * tf) / (tf + 1.5f * (0.25f + 0.75f * ((float)sentenceWC / indexer_.getAvgWordCount())));
             }
         }
         sentenceToScore[*it] = score;

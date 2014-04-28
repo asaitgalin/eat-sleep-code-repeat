@@ -8,9 +8,6 @@
 #include <set>
 
 class TextSplitter {
-/*
- * Splits text into sentences and write them to output file
- */
 public:
 
     TextSplitter(std::istream &input):
@@ -55,9 +52,6 @@ private:
 };
 
 class Timer { 
-/*
- * Simple timer to measure elapsed time
- */
 public:
     
     Timer(bool start = true) {
