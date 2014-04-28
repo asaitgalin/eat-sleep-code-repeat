@@ -162,6 +162,10 @@ public:
         errStream_(err)
     { } 
 
+    ~SearchEngine() {
+        delete stemmer_;
+    }
+
     void init();
     void processRequest(const std::string &req);
     
