@@ -1,0 +1,1 @@
+This folder contains some use cases for MapReduce framework. All applications here work with texts tokenized to sentences (one line - one sentence).
